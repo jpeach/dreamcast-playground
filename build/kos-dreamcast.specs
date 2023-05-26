@@ -1,0 +1,34 @@
+*kos_header_paths:
+-isystem %:getenv(KOS_BASE /include) -isystem %:getenv(KOS_BASE /kernel/arch/dreamcast/include) -isystem %:getenv(KOS_BASE /addons/include)
+
+*kos_library_paths:
+-L%:getenv(KOS_BASE /lib/dreamcast) -L%:getenv(KOS_BASE /addons/lib/dreamcast)
+
+*kos_linker_script:
+-T%:getenv(KOS_BASE /utils/ldscripts/shlelf.xc)
+
+*kos_libs:
+--start-group -lkallisti -lc %G --end-group
+
+*kos_defines:
+-D_arch_dreamcast
+
+*kos_cc_options:
+-ffunction-sections -fdata-sections -fno-builtin
+
+*cc1_options:
++ %(kos_header_paths) %(kos_defines) %(kos_cc_options)
+
+*cc1plus_options:
++ %(kos_header_paths) %(kos_defines) %(kos_cc_options)
+
+*cpp_options:
++ %(kos_header_paths) %(kos_defines)
+
+*subtarget_link_spec:
+%(kos_linker_script) -Ttext=0x8c010000 --gc-sections
+
+*link_gcc_c_sequence:
+%(kos_library_paths) %(kos_libs)
+
+# vim: set ts=8 sw=8 noet :
