@@ -1,7 +1,15 @@
-SPECS := -specs=$(dir $(lastword $(MAKEFILE_LIST)))/kos-dreamcast.specs
+SPECS := -specs=$(dir $(lastword $(MAKEFILE_LIST)))kos-dreamcast.specs
 
-CC := $(KOS_CC_BASE)/bin/$(KOS_CC_PREFIX)-gcc $(SPECS)
-CXX := $(KOS_CC_BASE)/bin/$(KOS_CC_PREFIX)-g++ $(SPECS)
+CFLAGS += $(SPECS)
+CXXFLAGS += $(SPECS)
 
 Load_Program = dc-tool-ser -t /dev/cu.usbserial-DTDDb115819 -b 115200 -x $<
-Clean_Objects = $(RM) *.o *.elf
+Clean_Objects = $(RM) *.o *.elf compile_commands.json
+
+.PHONY: compilationdb
+compilationdb:
+	CC=$(CC) CXX=$(CXX) bear --config $(dir $(lastword $(MAKEFILE_LIST)))../.bear -- $(MAKE)
+
+.PHONY: clean
+clean:
+	$(Clean_Objects)

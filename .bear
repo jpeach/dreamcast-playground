@@ -1,0 +1,18 @@
+{
+  "compilation": {
+    "compilers_to_recognize": [
+      {
+        "executable": "sh-elf-g++"
+      },
+      {
+        "executable": "sh-elf-gcc"
+      },
+      {
+        "executable": "/usr/local/Cellar/dc-toolchain-testing/2023.05.19/sh-elf/bin/sh-elf-g++"
+      },
+      {
+        "executable": "/usr/local/Cellar/dc-toolchain-testing/2023.05.19/sh-elf/bin/sh-elf-gcc"
+      }
+    ]
+  }
+}

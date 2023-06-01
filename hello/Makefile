@@ -1,12 +1,8 @@
-include ../build/common.mk
-
 hello.elf: hello.o
-	$(CXX) -o $@ $^
+	$(CXX) $(CXXFLAGS) -o $@ $^
 
 .PHONY: load
 load: hello.elf
 	$(Load_Program)
 
-.PHONY: clean
-clean:
-	$(Clean_Objects)
+include ../build/common.mk
