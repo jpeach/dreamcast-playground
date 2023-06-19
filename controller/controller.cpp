@@ -21,6 +21,18 @@ void zero_memory(T * ptr, unsigned count)
     ::memset(ptr, 0, sizeof(T) * count);
 }
 
+template <typename T, typename N>
+bool flags_set(T value, N flags)
+{
+    return (value & flags) == flags;
+}
+
+template <typename T, typename N>
+T flags_clear(T value, N flags)
+{
+    return value & ~flags;
+}
+
 // Given a vram pointer of pixel dimensions Width * Height, return a
 // pointer to the position given by x and y in the vram buffer.
 template<unsigned Width, unsigned Height, typename T>
@@ -134,6 +146,62 @@ void scan_controllers()
     }
 }
 
+void draw_controller_state()
+{
+    static const struct { int mask; int glyph; } button_glyphs[] = {
+        { CONT_A, BFONT_ABUTTON },
+        { CONT_B, BFONT_BBUTTON },
+        { CONT_X, BFONT_XBUTTON },
+        { CONT_Y, BFONT_YBUTTON },
+        { CONT_START, BFONT_STARTBUTTON },
+        { CONT_DPAD_UP | CONT_DPAD_LEFT, BFONT_UPLEFTARROW },
+        { CONT_DPAD_UP | CONT_DPAD_RIGHT, BFONT_UPRIGHTARROW },
+        { CONT_DPAD_DOWN | CONT_DPAD_LEFT, BFONT_DOWNLEFTARROW },
+        { CONT_DPAD_DOWN | CONT_DPAD_RIGHT, BFONT_DOWNRIGHTARROW },
+        { CONT_DPAD_UP, BFONT_UPARROW },
+        { CONT_DPAD_DOWN, BFONT_DOWNARROW },
+        { CONT_DPAD_LEFT, BFONT_LEFTARROW },
+        { CONT_DPAD_RIGHT, BFONT_RIGHTARROW },
+    };
+
+    MAPLE_FOREACH_BEGIN(MAPLE_FUNC_CONTROLLER, cont_state_t, st)
+
+    // We want to write each controller state to a separate line, where the
+    // line number is stable, and the first 4 lines are skipped.
+    auto lineno = 4 + __dev->port;
+    auto pos = linearize_point<640, 480>(vram_s, 0, BFONT_HEIGHT * lineno);
+
+    // Clear the full width of the vram for the string we are about to draw.
+    zero_memory(pos, 640 * BFONT_HEIGHT);
+
+    bfont_set_encoding(BFONT_CODE_ISO8859_1);
+
+    // Approximate the numbber of characters we can draw in a single line.
+    char line[640/BFONT_THIN_WIDTH];
+
+    auto nchar = snprintf(line, sizeof(line), "(%d,%d): ", __dev->unit, __dev->port);
+    bfont_draw_str(pos, 640, 1, line);
+
+    pos += nchar * BFONT_THIN_WIDTH;
+
+    bfont_set_encoding(BFONT_CODE_RAW);
+
+    uint32 pressed = st->buttons;
+    for (unsigned i = 0; i < array_size(button_glyphs); ++i) {
+        if (flags_set(pressed, button_glyphs[i].mask)) {
+            // Draw the matching glyph.
+            bfont_draw_wide(pos, 640, 1, button_glyphs[i].glyph);
+            // Clear the button mask that we just printed.
+            pressed = flags_clear(pressed, button_glyphs[i].mask);
+        }
+
+        // Advance pos so that the samy glyph is always in the same position.
+        pos += BFONT_WIDE_WIDTH;
+    }
+
+    MAPLE_FOREACH_END()
+}
+
 void setup_exit_sequence()
 {
     const uint32 exit_sequence = CONT_START | CONT_A | CONT_B | CONT_X | CONT_Y;
@@ -205,7 +273,7 @@ int main(int argc [[maybe_unused]], const char ** argv [[maybe_unused]])
 
     for (;;) {
         thd_sleep(std::chrono::milliseconds(100).count());
-        scan_controllers();
+        draw_controller_state();
     }
 
     return 0;
