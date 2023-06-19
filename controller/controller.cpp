@@ -141,14 +141,10 @@ void setup_exit_sequence()
         arch_exit();
     };
 
-    // Register the exit function on all 4 controller ports. Note that
-    // KallistiOS doesn't care whether the controllers are present yet,
-    // but will invoke the callback if and when the controllers are
-    // attached.
-    cont_btn_callback(maple_addr(0, 0), exit_sequence, exit_callback);
-    cont_btn_callback(maple_addr(0, 1), exit_sequence, exit_callback);
-    cont_btn_callback(maple_addr(0, 2), exit_sequence, exit_callback);
-    cont_btn_callback(maple_addr(0, 3), exit_sequence, exit_callback);
+    std::fprintf(stderr, "setting up exit sequence\n");
+
+    // Register the exit func on all controllers (i.e. address zero).
+    cont_btn_callback(0, exit_sequence, exit_callback);
 
     auto start = linearize_point<640, 480>(vram_s, 0, BFONT_HEIGHT);
     bfont_draw_str(start, 640, 0, "To exit press");
